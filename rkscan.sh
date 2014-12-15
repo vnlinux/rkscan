@@ -1,11 +1,22 @@
 #!/bin/bash
 
-# define the whitelist for binary file
-whitelist="bin|sbin|lib"
+# define the white list of binary path (one path per line)
+whitepath="/bin
+/sbin
+/usr/bin
+/usr/sbin
+/usr/lib
+"
 
-# find the running binary file is not in whitelist
-rootkit=$(find /proc -type l -name "*exe" -exec ls -al {} + 2>/dev/null \
-		| awk '{if($11!="") print $11}' | grep -vE $whitelist | sort -u)
+# find the binary excuted not in white paths
+for path in $whitepath
+do
+	exclude+="grep -v '^$path' | "
+done
+
+cmd="find /proc -type l -name '*exe' -exec ls -al {} + 2>/dev/null | awk '{if(\$11!=\"\") print \$11}' | $exclude sort -u"
+
+rootkit=$(eval $cmd)
 
 # result
 if [ -z "${rootkit}" ]; then
